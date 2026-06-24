@@ -11,17 +11,18 @@ The [Instacart Online Grocery Shopping Dataset](https://www.kaggle.com/datasets/
 
 ## Repository Structure
 sql/
-01_db_creation.sql                          # Database schema and table creation
 
-02_data_import.sql                          # Data import and loading
+├── 01_db_creation.sql          # Database schema and table creation
 
-03_ml_dataset.sql                           # ML dataset construction
+├── 02_data_import.sql          # Data import and loading
 
-04_feature_engineering_product.sql          # Product-level features
+├── 03_ml_dataset.sql           # ML dataset construction
 
-05_feature_engineering_user_product.sql     # User-product level features
+├── 04_feature_engineering_product.sql    # Product-level features
 
-06_feature_engineering_user.sql             # User-level features
+├── 05_feature_engineering_user_product.sql  # User-product interaction features
+
+└── 06_feature_engineering_user.sql       # User-level features
 
 ## Tools & Technologies
 - **Database:** PostgreSQL 17
@@ -31,4 +32,4 @@ sql/
 - **Version Control:** Git / GitHub
 
 ## Status
-In progress  - expected completion: October 2026
+🔄 In progress - expected completion: October 2026
