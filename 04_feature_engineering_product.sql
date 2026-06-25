@@ -48,21 +48,6 @@ FROM order_products_prior opp
 INNER JOIN orders o USING(order_id)
 GROUP BY opp.product_id;
 
--- Calculates the ordering frequency per product
-SELECT opp.product_id,
-       (COUNT(opp.order_id) - 1)::NUMERIC / NULLIF(SUM(o.days_since_prior_order), 0) AS product_order_frequency
-FROM order_products_prior opp
-INNER JOIN orders o USING(order_id)
-GROUP BY opp.product_id;
-
--- Counts the total order days and orders per week of each product
-SELECT opp.product_id,
-	   SUM(o.days_since_prior_order) AS product_days_total_active,
-       (COUNT(opp.order_id) - 1)::NUMERIC / NULLIF(SUM(o.days_since_prior_order) / 7.0, 0) AS product_order_per_week
-FROM order_products_prior opp
-INNER JOIN orders o USING(order_id)
-GROUP BY opp.product_id;
-
 -- For each user-product pair, calculates the number of days elapsed between 
 -- the first and last order containing that product (using each user's own 
 -- cumulative order timeline), then aggregates up to product level to get 
