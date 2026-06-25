@@ -476,12 +476,3 @@ SELECT pn.product_id,
 	   DENSE_RANK() OVER(PARTITION BY p.aisle_id ORDER BY pn.total_products_in_orders DESC) AS aisle_product_popularity
 FROM products_number pn 
 INNER JOIN products p USING(product_id);
-
-SELECT product_id,
-	LEAD(CASE WHEN product_id IN (SELECT product_id FROM order_products_prior
-								INNER JOIN orders USING(order_id) WHERE order_number>=2)
-	THEN COUNT(product_id) ELSE 0 END,3,0) OVER(ORDER BY product_id)
-FROM order_products_prior 
-INNER JOIN orders USING(order_id)
-WHERE order_number = 1
-GROUP BY product_id;
