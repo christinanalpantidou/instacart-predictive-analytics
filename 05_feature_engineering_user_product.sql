@@ -6,17 +6,19 @@ FROM orders o
 INNER JOIN order_products_prior opp USING(order_id)
 GROUP BY o.user_id, opp.product_id;
 
--- For each pair user-product, calculates the average days since the last order 
--- included the given product
+-- For each pair user-product, calculates the average user's order gap restricted to orders 
+-- that included the given product
 SELECT o.user_id,
 	   opp.product_id,
-	   AVG(o.days_since_prior_order) AS user_product_avg_days_since_prior_order
+	   AVG(o.days_since_prior_order) AS user_order_tempo
 FROM orders o
 INNER JOIN order_products_prior opp USING(order_id)
 GROUP BY o.user_id, opp.product_id;
 
 -- For each pair user-product, calculates the number of days that have elapsed from 
--- the first order to the last order that included the given product
+-- the first order to the last order that included the given product and the average days 
+-- between consecutive purchases of that specific product (true repurchase cadence). 
+-- NULL when bought only once.
 WITH 
 
 order_cumulative_days AS (
@@ -30,6 +32,7 @@ WHERE eval_set = 'prior'
 user_product_first_last AS (
 SELECT o.user_id, 
        opp.product_id,
+	   COUNT(DISTINCT o.order_id) AS user_product_order_count,
        MIN(o.order_number) AS first_order_number,
        MAX(o.order_number) AS last_order_number
 FROM orders o
@@ -39,7 +42,9 @@ GROUP BY o.user_id, opp.product_id
 
 SELECT upl.user_id,
        upl.product_id,
-       (ocd_last.cumulative_days - ocd_first.cumulative_days) AS user_product_days_from_first_to_last
+       (ocd_last.cumulative_days - ocd_first.cumulative_days) AS user_product_days_from_first_to_last,
+	   (ocd_last.cumulative_days - ocd_first.cumulative_days)::NUMERIC
+           / NULLIF(upl.user_product_order_count - 1, 0) AS user_product_avg_repurchase_interval
 FROM user_product_first_last upl
 INNER JOIN order_cumulative_days ocd_first
     ON upl.user_id = ocd_first.user_id AND upl.first_order_number = ocd_first.order_number
