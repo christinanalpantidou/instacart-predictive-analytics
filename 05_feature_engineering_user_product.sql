@@ -263,6 +263,83 @@ FROM (SELECT DISTINCT o.user_id, opp.product_id
 LEFT JOIN user_last_order ulo 
     ON up.user_id = ulo.user_id AND up.product_id = ulo.product_id;
 
+-- For each user-product, the length of the unbroken run of the user's most
+-- recent consecutive orders that contained the product (current reorder streak).
+WITH
+
+user_max AS (
+SELECT user_id, MAX(order_number) AS max_order_number
+FROM orders
+WHERE eval_set = 'prior'
+GROUP BY user_id
+),
+
+product_orders AS (
+SELECT o.user_id,
+       opp.product_id,
+       o.order_number,
+       o.order_number
+         - ROW_NUMBER() OVER (PARTITION BY o.user_id, opp.product_id ORDER BY o.order_number) AS grp
+FROM orders o
+INNER JOIN order_products_prior opp USING(order_id)
+),
+
+streak AS (
+SELECT user_id,
+       product_id,
+       grp,
+       COUNT(*) AS run_length,
+	   MAX(order_number) AS run_end
+FROM product_orders 
+GROUP BY user_id, product_id, grp
+)
+
+SELECT s.user_id,
+       s.product_id,
+       s.run_length AS user_product_current_streak
+FROM streak s
+INNER JOIN user_max um USING(user_id)
+WHERE s.run_end = um.max_order_number;
+
+-- For each user-product pair, computes the product's order rate over the user's
+-- first-half orders vs their second-half (positive = rising, negative = fading).
+WITH
+
+user_bounds AS (
+SELECT user_id, MAX(order_number) AS max_order_number
+FROM orders
+WHERE eval_set = 'prior'
+GROUP BY user_id
+),
+
+half_order_counts AS (
+SELECT o.user_id,
+       COUNT(*) FILTER (WHERE o.order_number <= ub.max_order_number / 2.0) AS first_half_orders,
+       COUNT(*) FILTER (WHERE o.order_number >  ub.max_order_number / 2.0) AS second_half_orders
+FROM orders o
+INNER JOIN user_bounds ub USING(user_id)
+WHERE o.eval_set = 'prior'
+GROUP BY o.user_id
+),
+
+product_half_counts AS (
+SELECT o.user_id,
+       opp.product_id,
+       COUNT(*) FILTER (WHERE o.order_number <= ub.max_order_number / 2.0) AS first_half_product,
+       COUNT(*) FILTER (WHERE o.order_number >  ub.max_order_number / 2.0) AS second_half_product
+FROM orders o
+INNER JOIN order_products_prior opp USING(order_id)
+INNER JOIN user_bounds ub USING(user_id)
+GROUP BY o.user_id, opp.product_id
+)
+
+SELECT phc.user_id,
+       phc.product_id,
+       phc.second_half_product::NUMERIC / NULLIF(hoc.second_half_orders, 0)
+         - phc.first_half_product::NUMERIC / NULLIF(hoc.first_half_orders, 0) AS user_product_order_trend
+FROM product_half_counts phc
+INNER JOIN half_order_counts hoc USING(user_id);
+
 -- Calculates the days since user last ordered this specific product
 WITH 
 
