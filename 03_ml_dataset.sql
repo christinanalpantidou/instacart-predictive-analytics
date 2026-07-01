@@ -59,6 +59,12 @@ INNER JOIN products_table pt USING(product_id)
 LEFT JOIN train_table tt
 	ON ot.user_id = tt.user_id AND po.product_id = tt.product_id;
 
+
 UPDATE ml_dataset
 SET days_since_prior_order = NULL
 WHERE days_since_prior_order = -1;
+
+
+ALTER TABLE ml_dataset
+ALTER COLUMN reordered TYPE BOOLEAN
+USING (reordered = 1);
