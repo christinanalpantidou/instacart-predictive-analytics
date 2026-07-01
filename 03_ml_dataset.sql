@@ -68,3 +68,7 @@ WHERE days_since_prior_order = -1;
 ALTER TABLE ml_dataset
 ALTER COLUMN reordered TYPE BOOLEAN
 USING (reordered = 1);
+
+
+ALTER TABLE ml_dataset
+DROP COLUMN target_variable;
