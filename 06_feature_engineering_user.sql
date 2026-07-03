@@ -1,11 +1,3 @@
--- Calculates the number of products per order (basket size)
-SELECT o.user_id, 
-		o.order_id, 
-		COUNT(opp.product_id) AS basket_size
-FROM orders o 
-INNER JOIN order_products_prior opp USING(order_id)
-GROUP BY o.user_id, o.order_id;
-
 -- Calculates the average basket size and it's standard deviation for each user
 WITH 
 
