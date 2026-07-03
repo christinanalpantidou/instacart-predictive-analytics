@@ -365,12 +365,6 @@ SELECT
     COALESCE(product_first_order_reorder_user_count, 0)::NUMERIC / product_first_cart_first_order_user_count AS product_first_order_reorder_rate
 FROM first_and_reorder;
 
--- For each order, counts the total number of distinct products it contains
-SELECT order_id,
-		COUNT(opp.product_id) AS order_product_count
-FROM order_products_prior 
-GROUP BY order_id;
-
 -- For each product, flags whether it appeared in at least one user's first order 
 -- AND in at least one user's last order returning 1 if both conditions are met, 0 otherwise
 WITH 
