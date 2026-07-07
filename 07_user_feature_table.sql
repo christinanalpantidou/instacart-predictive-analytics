@@ -182,8 +182,10 @@ SELECT ot.user_id,
 		rb.user_reorder_diversity_rate,
 		lp.user_last_product_count,
 		fp.user_first_product_count,
-		fsd.user_products_in_first_and_second,
-		fl.user_products_in_first_and_last
+		CASE WHEN oc.user_total_orders >= 2 THEN 
+			COALESCE(fsd.user_products_in_first_and_second, 0) 
+		END AS user_products_in_first_and_second,
+		COALESCE(fl.user_products_in_first_and_last, 0) AS user_products_in_first_and_last
 FROM orders_table ot
 LEFT JOIN basket b USING(user_id)
 LEFT JOIN order_counts oc USING(user_id)
@@ -196,6 +198,7 @@ LEFT JOIN first_products fp USING(user_id)
 LEFT JOIN first_second fsd USING(user_id)
 LEFT JOIN first_last fl USING(user_id);
 
+-- Ensures user_feature grain: one row per user_id
 DO $$
 DECLARE
     table_rows BIGINT;
@@ -208,5 +211,59 @@ BEGIN
     IF table_rows <> expected THEN
         RAISE EXCEPTION 'user_feature grain violated: % rows, expected %',
             table_rows, expected;
+    END IF;
+END $$;
+
+-- Ensures all user_feature logical constraints and domain rules hold
+DO $$
+DECLARE
+    bad BIGINT;
+BEGIN
+    -- Subset counts cannot exceed their supersets
+    SELECT COUNT(*) INTO bad FROM user_feature
+    WHERE user_reordered_unique_products > user_total_unique_products
+       OR user_reordered_department_count > user_unique_department_count
+       OR user_reordered_aisle_count > user_unique_aisle_count
+       OR user_reordered_unique_products > user_total_reorders
+       OR user_products_in_first_and_second > user_first_product_count
+       OR user_products_in_first_and_last > user_first_product_count
+       OR user_products_in_first_and_last > user_last_product_count;
+    IF bad > 0 THEN
+        RAISE EXCEPTION 'user_feature: subset count invariant violated on % rows', bad;
+    END IF;
+
+    -- Rates in [0, 1]
+    SELECT COUNT(*) INTO bad FROM user_feature
+    WHERE user_reorder_rate NOT BETWEEN 0 AND 1
+       OR user_reorder_diversity_rate NOT BETWEEN 0 AND 1
+       OR user_morning_order_rate NOT BETWEEN 0 AND 1
+       OR user_afternoon_order_rate NOT BETWEEN 0 AND 1
+       OR user_evening_order_rate NOT BETWEEN 0 AND 1
+       OR user_night_order_rate NOT BETWEEN 0 AND 1
+       OR user_weekend_order_rate NOT BETWEEN 0 AND 1
+       OR user_weekday_order_rate NOT BETWEEN 0 AND 1;
+    IF bad > 0 THEN
+        RAISE EXCEPTION 'user_feature: rate out of [0,1] on % rows', bad;
+    END IF;
+
+    -- Partition rates must sum to 1 (within numeric rounding tolerance)
+    SELECT COUNT(*) INTO bad FROM user_feature
+    WHERE ABS(user_morning_order_rate + user_afternoon_order_rate
+            + user_evening_order_rate + user_night_order_rate - 1) > 1e-9
+       OR ABS(user_weekend_order_rate + user_weekday_order_rate - 1) > 1e-9;
+    IF bad > 0 THEN
+        RAISE EXCEPTION 'user_feature: partition rates do not sum to 1 on % rows', bad;
+    END IF;
+
+    -- Domain bounds
+    SELECT COUNT(*) INTO bad FROM user_feature
+    WHERE user_total_orders < 1
+       OR user_avg_basket_size < 1
+       OR user_total_unique_products < 1
+       OR user_preferred_order_day NOT BETWEEN 0 AND 6
+       OR user_preferred_order_hour NOT BETWEEN 0 AND 23
+       OR user_avg_days_between_orders NOT BETWEEN 0 AND 30;
+    IF bad > 0 THEN
+        RAISE EXCEPTION 'user_feature: domain bound violated on % rows', bad;
     END IF;
 END $$;
