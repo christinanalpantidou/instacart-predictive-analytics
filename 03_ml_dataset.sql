@@ -72,3 +72,13 @@ USING (reordered = 1);
 
 ALTER TABLE ml_dataset
 DROP COLUMN target_variable;
+
+-- Add the variables from user_feature, product_feature and user_product_feature tables
+DROP TABLE IF EXISTS ml_dataset_final;
+
+CREATE TABLE ml_dataset_final AS
+SELECT *
+FROM ml_dataset
+LEFT JOIN user_feature USING(user_id)
+LEFT JOIN product_feature USING(product_id)
+LEFT JOIN user_product_feature USING(user_id, product_id);
