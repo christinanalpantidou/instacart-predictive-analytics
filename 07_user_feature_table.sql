@@ -47,7 +47,6 @@ GROUP BY user_id
 
 timing AS (
 SELECT user_id,
-		AVG(days_since_prior_order) AS user_avg_days_between_orders,
 		MODE() WITHIN GROUP (ORDER BY order_dow) AS user_preferred_order_day,
 		MODE() WITHIN GROUP (ORDER BY order_hour_of_day) AS user_preferred_order_hour,
 		AVG(CASE WHEN order_hour_of_day BETWEEN 6 AND 11 THEN 1 ELSE 0 END) AS user_morning_order_rate,
@@ -161,7 +160,6 @@ SELECT ot.user_id,
 		oc.user_total_orders,
 		rr.user_reorder_rate,
 		COALESCE(tr.user_total_reorders, 0) AS user_total_reorders,
-		t.user_avg_days_between_orders,
 		t.user_preferred_order_day,
 		t.user_preferred_order_hour,
 		t.user_morning_order_rate,
@@ -261,8 +259,7 @@ BEGIN
        OR user_avg_basket_size < 1
        OR user_total_unique_products < 1
        OR user_preferred_order_day NOT BETWEEN 0 AND 6
-       OR user_preferred_order_hour NOT BETWEEN 0 AND 23
-       OR user_avg_days_between_orders NOT BETWEEN 0 AND 30;
+       OR user_preferred_order_hour NOT BETWEEN 0 AND 23;
     IF bad > 0 THEN
         RAISE EXCEPTION 'user_feature: domain bound violated on % rows', bad;
     END IF;
