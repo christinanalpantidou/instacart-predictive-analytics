@@ -98,8 +98,7 @@ user_product_frequency AS (
 average_frequencies AS (
 SELECT product_id, 
 	   AVG(days_from_first_to_last) AS product_avg_days_from_first_to_last_order,
-	   AVG(up_order_frequency) AS product_order_frequency,
-       AVG(up_order_frequency) * 7 AS product_order_per_week
+	   AVG(up_order_frequency) AS product_order_frequency
 FROM user_product_frequency
 GROUP BY product_id
 ),
@@ -414,7 +413,6 @@ SELECT pt.product_id,
 		ad.product_avg_days_between_orders,
 		af.product_avg_days_from_first_to_last_order,
 		af.product_order_frequency,
-		af.product_order_per_week,
 		phd.product_preferred_order_day,
 		phd.product_preferred_order_hour,
 		pu.product_unique_user_count,
