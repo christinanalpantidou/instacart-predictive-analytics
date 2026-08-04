@@ -219,25 +219,23 @@ FROM products p
 LEFT JOIN both_tables2 bt USING(department_id)
 ),
 
-first_reorder AS (
-SELECT 
-    opp.product_id,
-    COUNT(*) AS product_first_order_reorder_count
-FROM order_products_prior opp
-INNER JOIN (SELECT DISTINCT opp.product_id
-			FROM order_products_prior opp
-			INNER JOIN orders o USING(order_id)
-			WHERE o.order_number = 1
-			)fp USING(product_id)
-WHERE opp.reordered = true
-GROUP BY opp.product_id
-),
-
 users_first_products AS (
 SELECT DISTINCT o.user_id, opp.product_id
 FROM order_products_prior opp
 INNER JOIN orders o USING(order_id)
 WHERE o.order_number = 1
+),
+
+first_reorder AS (
+SELECT 
+    ufp.product_id,
+    COUNT(*) AS product_first_order_reorder_count
+FROM order_products_prior opp
+INNER JOIN orders o USING(order_id)
+INNER JOIN users_first_products ufp 
+	ON ufp.user_id = o.user_id AND ufp.product_id = opp.product_id
+WHERE opp.reordered = true
+GROUP BY ufp.product_id
 ),
 
 users_reorders AS (
