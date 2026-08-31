@@ -291,15 +291,6 @@ WHERE o.order_number = 1 AND opp.add_to_cart_order = 1
 GROUP BY opp.product_id
 ),
 
-firstCart_firstOrder_user AS (
-SELECT opp.product_id,
-	COUNT(o.user_id) * 100.0 / SUM(COUNT(o.user_id)) OVER() AS product_first_cart_first_order_user_pct
-FROM order_products_prior opp
-INNER JOIN orders o USING(order_id)
-WHERE o.order_number = 1 AND opp.add_to_cart_order = 1
-GROUP BY opp.product_id
-),
-
 first_order_product_users AS (
 SELECT DISTINCT o.user_id, opp.product_id
 FROM order_products_prior opp
@@ -427,7 +418,6 @@ SELECT pt.product_id,
 		COALESCE(fas.product_repeat_user_count, 0) AS product_repeat_user_count,
 		COALESCE(fcfo.product_first_cart_first_order_count, 0) AS product_first_cart_first_order_count,
 		fcfo.product_first_cart_first_order_pct,
-		fcfou.product_first_cart_first_order_user_pct,
 		COALESCE(fcor.product_first_cart_first_order_user_count, 0) AS product_first_cart_first_order_user_count,
 		COALESCE(fcor.product_first_order_first_cart_reorder_user_count, 0) AS product_first_order_first_cart_reorder_user_count,
 		fcor.product_first_order_first_cart_reorder_rate,
@@ -454,7 +444,6 @@ LEFT JOIN first_reorder fr USING(product_id)
 LEFT JOIN first_reorder_rate frr USING(product_id)
 LEFT JOIN first_and_second fas USING(product_id)
 LEFT JOIN firstCart_firstOrder fcfo USING(product_id)
-LEFT JOIN firstCart_firstOrder_user fcfou USING(product_id)
 LEFT JOIN first_cart_order_rate fcor USING(product_id)
 LEFT JOIN first_and_last fal USING(product_id)
 LEFT JOIN last_order2 lo2 USING(product_id)
@@ -510,8 +499,7 @@ BEGIN
 
     -- Percentages must lie in [0, 100]
     SELECT COUNT(*) INTO bad FROM product_feature
-    WHERE product_first_cart_first_order_pct NOT BETWEEN 0 AND 100
-       OR product_first_cart_first_order_user_pct NOT BETWEEN 0 AND 100;
+    WHERE product_first_cart_first_order_pct NOT BETWEEN 0 AND 100;
     IF bad > 0 THEN
         RAISE EXCEPTION 'product_feature: pct out of [0,100] on % rows', bad;
     END IF;
