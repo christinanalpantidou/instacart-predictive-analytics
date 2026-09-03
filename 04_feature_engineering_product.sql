@@ -408,7 +408,7 @@ WHERE (o.user_id, o.order_number) IN (SELECT user_id, MAX(order_number)
 										FROM orders 
 										WHERE eval_set = 'prior'
 										GROUP BY user_id
-							         )
+							         )									 
 GROUP BY opp.product_id;
 
 -- Counts the number of users who ordered a given product in both first and last order

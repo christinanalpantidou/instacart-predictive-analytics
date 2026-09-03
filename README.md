@@ -24,6 +24,35 @@ sql/
 
 └── 06_feature_engineering_user.sql       # User-level features
 
+├── 07_user_feature_table.sql                # User feature table
+
+├── 08_product_feature_table.sql             # Product feature table
+
+└── 09_user_product_feature_table.sql        # User-product feature table
+
+dashboards/
+├── dashboard_general.png                    # Orders, top products & basket size
+
+├── dashboard_user.png                       # Shopping hours, reorder cycle & frequency
+
+└── dashboard_product.png                    # Product popularity, loyalty & department analysis
+
+## Power BI Dashboards
+
+Interactive dashboards built in Power BI to explore the feature-engineered data.
+
+General Overview
+
+Show Image Total orders per user, top 20 products by order-to-user ratio, most ordered products, and basket size distribution.
+
+User Behavior
+
+Show Image Shopping activity by hour and day of week, customer reorder cycle distribution, and user order frequency distribution.
+
+Product Analysis
+
+Show Image Product popularity vs. reorder loyalty, reorder likelihood by cart position, and volume/reorder rate concentration by department.
+
 ## Tools & Technologies
 - **Database:** PostgreSQL 17
 - **Query Tool:** pgAdmin 4
