@@ -30,7 +30,9 @@ sql/
 
 └── 09_user_product_feature_table.sql        # User-product feature table
 
+
 dashboards/
+
 ├── dashboard_general.png                    # Orders, top products & basket size
 
 ├── dashboard_user.png                       # Shopping hours, reorder cycle & frequency
