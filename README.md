@@ -41,17 +41,20 @@ dashboards/
 
 Interactive dashboards built in Power BI to explore the feature-engineered data.
 
-General Overview
 
-Show Image Total orders per user, top 20 products by order-to-user ratio, most ordered products, and basket size distribution.
+**General Overview**
+![General Dashboard](dashboards/dashboard_general.png)
+Total orders per user, top 20 products by order-to-user ratio, most ordered products, and basket size distribution.
 
-User Behavior
 
-Show Image Shopping activity by hour and day of week, customer reorder cycle distribution, and user order frequency distribution.
+**User Behavior**
+![User Dashboard](dashboards/dashboard_user.png)
+Shopping activity by hour and day of week, customer reorder cycle distribution, and user order frequency distribution.
 
-Product Analysis
 
-Show Image Product popularity vs. reorder loyalty, reorder likelihood by cart position, and volume/reorder rate concentration by department.
+**Product Analysis**
+![Product Dashboard](dashboards/dashboard_product.png)
+Product popularity vs. reorder loyalty, reorder likelihood by cart position, and volume/reorder rate concentration by department.
 
 ## Tools & Technologies
 - **Database:** PostgreSQL 17
