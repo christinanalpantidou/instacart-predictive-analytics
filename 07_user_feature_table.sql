@@ -55,9 +55,7 @@ SELECT user_id,
 		AVG(CASE WHEN order_hour_of_day BETWEEN 21 AND 23 
 			OR order_hour_of_day BETWEEN 0 AND 5 THEN 1 ELSE 0 END) AS user_night_order_rate,
 		AVG(CASE WHEN order_dow IN (0,6) THEN 1 ELSE 0 END) AS user_weekend_order_rate,
-		AVG(CASE WHEN order_dow NOT IN (0,6) THEN 1 ELSE 0 END) AS user_weekday_order_rate,
 		SUM(days_since_prior_order) AS user_total_days_active,
-       (COUNT(order_id) - 1)::NUMERIC / NULLIF(SUM(days_since_prior_order) / 7.0, 0) AS user_orders_per_week,
 	   (COUNT(order_id) - 1)::NUMERIC / NULLIF(SUM(days_since_prior_order), 0) AS user_order_frequency
 FROM orders
 WHERE eval_set = 'prior'
@@ -167,9 +165,7 @@ SELECT ot.user_id,
 		t.user_evening_order_rate,
 		t.user_night_order_rate,
 		t.user_weekend_order_rate,
-		t.user_weekday_order_rate,
 		t.user_total_days_active,
-		t.user_orders_per_week,
 		t.user_order_frequency,
 		rb.user_unique_department_count,
 		rb.user_unique_aisle_count,
@@ -238,8 +234,7 @@ BEGIN
        OR user_afternoon_order_rate NOT BETWEEN 0 AND 1
        OR user_evening_order_rate NOT BETWEEN 0 AND 1
        OR user_night_order_rate NOT BETWEEN 0 AND 1
-       OR user_weekend_order_rate NOT BETWEEN 0 AND 1
-       OR user_weekday_order_rate NOT BETWEEN 0 AND 1;
+       OR user_weekend_order_rate NOT BETWEEN 0 AND 1;
     IF bad > 0 THEN
         RAISE EXCEPTION 'user_feature: rate out of [0,1] on % rows', bad;
     END IF;
@@ -247,8 +242,7 @@ BEGIN
     -- Partition rates must sum to 1 (within numeric rounding tolerance)
     SELECT COUNT(*) INTO bad FROM user_feature
     WHERE ABS(user_morning_order_rate + user_afternoon_order_rate
-            + user_evening_order_rate + user_night_order_rate - 1) > 1e-9
-       OR ABS(user_weekend_order_rate + user_weekday_order_rate - 1) > 1e-9;
+            + user_evening_order_rate + user_night_order_rate - 1) > 1e-9;
     IF bad > 0 THEN
         RAISE EXCEPTION 'user_feature: partition rates do not sum to 1 on % rows', bad;
     END IF;
