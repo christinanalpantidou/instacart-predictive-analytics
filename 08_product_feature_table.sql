@@ -40,15 +40,6 @@ WHERE reordered = true
 GROUP BY product_id
 ),
 
-first_order1 AS (
-SELECT opp.product_id,
-        COUNT(*) AS product_first_order_count
-FROM order_products_prior opp
-INNER JOIN orders o USING(order_id)
-WHERE o.order_number = 1
-GROUP BY opp.product_id
-),
-
 average_days AS (
 SELECT opp.product_id, 
 		AVG(o.days_since_prior_order) AS product_avg_days_between_orders
@@ -284,7 +275,6 @@ GROUP BY product_id
 
 firstCart_firstOrder AS (
 SELECT opp.product_id, 
-	COUNT(*) AS product_first_cart_first_order_count,
 	COUNT(*) * 100.0 / SUM(COUNT(*)) OVER() AS product_first_cart_first_order_pct
 FROM orders o
 INNER JOIN order_products_prior opp USING(order_id)
@@ -399,7 +389,6 @@ SELECT pt.product_id,
 		aa.aisle_avg_product_order_count,
 		da.department_avg_product_order_count,
 		COALESCE(rc.product_reorder_count, 0) AS product_reorder_count,
-		COALESCE(fo1.product_first_order_count, 0) AS product_first_order_count,
 		ad.product_avg_days_between_orders,
 		af.product_avg_days_from_first_to_last_order,
 		af.product_order_frequency,
@@ -417,7 +406,6 @@ SELECT pt.product_id,
 		COALESCE(frr.product_first_order_reorder_user_count, 0) AS product_first_order_reorder_user_count,
 		frr.product_first_order_reorder_rate,
 		COALESCE(fas.product_repeat_user_count, 0) AS product_repeat_user_count,
-		COALESCE(fcfo.product_first_cart_first_order_count, 0) AS product_first_cart_first_order_count,
 		fcfo.product_first_cart_first_order_pct,
 		COALESCE(fcor.product_first_cart_first_order_user_count, 0) AS product_first_cart_first_order_user_count,
 		COALESCE(fcor.product_first_order_first_cart_reorder_user_count, 0) AS product_first_order_first_cart_reorder_user_count,
@@ -432,7 +420,6 @@ LEFT JOIN reorderRate_productCounts rrpc USING(product_id)
 LEFT JOIN aisle_average aa USING(product_id)
 LEFT JOIN department_average da USING(product_id)
 LEFT JOIN reorder_count rc USING(product_id)
-LEFT JOIN first_order1 fo1 USING(product_id)
 LEFT JOIN average_days ad USING(product_id)
 LEFT JOIN average_frequencies af USING(product_id)
 LEFT JOIN preferred_hour_day phd USING(product_id)
@@ -475,7 +462,6 @@ BEGIN
     -- Subset counts cannot exceed their supersets
     SELECT COUNT(*) INTO bad FROM product_feature
     WHERE product_reorder_count > product_order_count
-       OR product_first_order_count > product_order_count
        OR product_unique_reorder_user_count > product_unique_user_count
        OR product_first_order_reorder_user_count > product_first_order_user_count
        OR product_first_order_first_cart_reorder_user_count > product_first_cart_first_order_user_count
