@@ -14,3 +14,7 @@ desktop.ini
 
 *.backup
 *.dump
+__pycache__/
+*.parquet
+xgb_final*.json
+!machine-learning/*.csv
